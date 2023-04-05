@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  db:
+    image: 'postgres:15.2-alpine'
+    container_name: shelf-life-db
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASS}
+    restart: unless-stopped
+    networks:
+      - database-network
+
+networks:
+  database-network:
+    driver: bridge
