@@ -11,6 +11,7 @@ import java.util.Set;
 public interface HouseholdDAO extends CrudRepository<Household, String> {
 
     Set<Household> findByOrderById();
-    Optional<Household> findById(String id);
+    Optional<Household> findHouseholdById(String id);
+    Optional<Household> findHouseholdByName(String name);
 
 }

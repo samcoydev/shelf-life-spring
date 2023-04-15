@@ -8,6 +8,10 @@ import com.samcodesthings.shelfliferestapi.service.HouseholdService;
 import com.samcodesthings.shelfliferestapi.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,7 +25,7 @@ public class UserServiceImpl implements UserService {
 
     UserDAO userDao;
 
-    HouseholdService householdService;
+    ModelMapper modelMapper;
 
     @Override
     public User findByEmail(String email) {
@@ -29,10 +33,18 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<User> findByHousehold(Household household) {
+    public List<User> findByHouseholdId(String householdId) {
         List<User> userList = new ArrayList<>();
-        userDao.findByHousehold(household).iterator().forEachRemaining(userList::add);
+        userDao.findUsersByHouseholdId(householdId).iterator().forEachRemaining(userList::add);
         return userList;
+    }
+
+    @Override
+    public UserDTO findSignedInUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+        System.out.println("TESTING: " + username);
+        return modelMapper.map(findByEmail("samueljoshuacoy@gmail.com"), UserDTO.class);
     }
 
     @Override
@@ -40,14 +52,11 @@ public class UserServiceImpl implements UserService {
         log.info("SAVE USER: " + user);
         User newUser = new User();
         newUser.setEmail(user.getEmail());
+        newUser.setFirstName(user.getFirstName());
+        newUser.setLastName(user.getLastName());
         newUser.setHasBeenWelcomed(false);
 
         return userDao.save(newUser);
-    }
-
-    @Override
-    public void householdRequestToUserFromUser(String requestToEmail, String email) {
-
     }
 
     @Override
@@ -58,14 +67,7 @@ public class UserServiceImpl implements UserService {
             User existingUser = optionalUser.get();
             existingUser.setHousehold(household);
 
-            User daoUser = userDao.save(existingUser);
-
-            if (household == null && findByHousehold(household).stream().count() == 0) {
-                log.info("User was leaving household and the household has no one else. Delete.");
-                householdService.delete(optionalUser.get().getHousehold().getId());
-            }
-
-            return daoUser;
+            return userDao.save(existingUser);
         } else {
             log.info("Couldn't find user with email: " + email);
             return null;

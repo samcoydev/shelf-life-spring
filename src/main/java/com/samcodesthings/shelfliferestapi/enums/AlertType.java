@@ -1,7 +1,7 @@
 package com.samcodesthings.shelfliferestapi.enums;
 
 public enum AlertType {
-    INVITATION ("Invitation"),
+    REQUEST ("Request"),
     EXPIRY_ALERT ("Expiry Alert");
 
     private final String state;

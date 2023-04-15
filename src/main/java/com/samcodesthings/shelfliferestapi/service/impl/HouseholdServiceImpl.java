@@ -1,8 +1,14 @@
 package com.samcodesthings.shelfliferestapi.service.impl;
 
 import com.samcodesthings.shelfliferestapi.dao.HouseholdDAO;
+import com.samcodesthings.shelfliferestapi.dao.HouseholdRequestDAO;
+import com.samcodesthings.shelfliferestapi.dto.AlertDTO;
 import com.samcodesthings.shelfliferestapi.dto.HouseholdDTO;
+import com.samcodesthings.shelfliferestapi.enums.AlertType;
+import com.samcodesthings.shelfliferestapi.model.Alert;
 import com.samcodesthings.shelfliferestapi.model.Household;
+import com.samcodesthings.shelfliferestapi.model.HouseholdRequest;
+import com.samcodesthings.shelfliferestapi.service.AlertService;
 import com.samcodesthings.shelfliferestapi.service.HouseholdService;
 import com.samcodesthings.shelfliferestapi.service.UserService;
 import lombok.AllArgsConstructor;
@@ -20,7 +26,11 @@ public class HouseholdServiceImpl implements HouseholdService {
 
     HouseholdDAO householdDAO;
 
+    HouseholdRequestDAO householdRequestDAO;
+
     UserService userService;
+
+    AlertService alertService;
 
     @Override
     public List<Household> findAll() {
@@ -31,7 +41,13 @@ public class HouseholdServiceImpl implements HouseholdService {
 
     @Override
     public Household findById(String id)  {
-        return householdDAO.findById(id).get();
+        return householdDAO.findHouseholdById(id).get();
+    }
+
+    @Override
+    public Optional<Household> findByName(String name)  {
+        log.info("Find by name: " + name);
+        return householdDAO.findHouseholdByName(name);
     }
 
     @Override
@@ -59,6 +75,28 @@ public class HouseholdServiceImpl implements HouseholdService {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public HouseholdRequest requestToJoinHousehold(String fromEmail, String householdName) throws Exception {
+            if (findByName(householdName).isEmpty())
+                throw new Exception("There was no household by the name of: " + householdName);
+
+            Household household = findByName(householdName).get();
+
+            HouseholdRequest newReq = new HouseholdRequest();
+            newReq.setRequestedHousehold(household);
+            newReq.setFromEmail(fromEmail);
+            HouseholdRequest savedReq = householdRequestDAO.save(newReq);
+
+            AlertDTO newAlert = new AlertDTO();
+            newAlert.setAlertType(AlertType.REQUEST);
+            newAlert.setHousehold(household);
+            newAlert.setText("User " + fromEmail + " would like to join your Household");
+            newAlert.setRequest(savedReq);
+            alertService.save(newAlert);
+
+            return savedReq;
     }
 
     @Override

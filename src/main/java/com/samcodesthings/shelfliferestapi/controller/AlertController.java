@@ -1,11 +1,8 @@
 package com.samcodesthings.shelfliferestapi.controller;
 
-import com.samcodesthings.shelfliferestapi.dto.HouseholdDTO;
+import com.samcodesthings.shelfliferestapi.dto.RequestResponseDTO;
 import com.samcodesthings.shelfliferestapi.model.Alert;
-import com.samcodesthings.shelfliferestapi.model.Household;
-import com.samcodesthings.shelfliferestapi.model.User;
 import com.samcodesthings.shelfliferestapi.service.AlertService;
-import com.samcodesthings.shelfliferestapi.service.HouseholdService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -35,6 +32,12 @@ public class AlertController {
     public List<Alert> getAlertsByUserEmail(@RequestHeader("User-Email") String email) {
         log.info("[GET] Alerts for email: " + email);
         return alertService.getAlertsByUserEmailsHousehold(email);
+    }
+
+    @PostMapping(path = "/action")
+    public void respondToRequest(@RequestHeader("User-Email") String email, @Valid @RequestBody RequestResponseDTO requestResponseDTO) {
+        log.info("[POST] Respond to email: " + email);
+        alertService.respondToRequest(requestResponseDTO.getAlertId(), requestResponseDTO.isDidAccept());
     }
 
 }

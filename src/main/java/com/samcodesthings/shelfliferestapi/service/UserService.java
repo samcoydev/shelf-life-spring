@@ -9,12 +9,12 @@ import java.util.List;
 public interface UserService {
 
     User findByEmail(String email);
-    List<User> findByHousehold(Household household);
+    UserDTO findSignedInUser();
+    List<User> findByHouseholdId(String householdId);
     User save(UserDTO user);
     void delete(String id);
 
     User updateHouseholdWithEmail(String email, Household household);
     User welcomeUserWithEmail(String email);
-    void householdRequestToUserFromUser(String requestToEmail, String email);
 
 }

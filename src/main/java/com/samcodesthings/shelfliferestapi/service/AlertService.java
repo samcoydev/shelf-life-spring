@@ -10,6 +10,7 @@ import java.util.List;
 public interface AlertService {
 
     List<Alert> getAlertsByUserEmailsHousehold(String email);
+    void respondToRequest(String alertId, boolean didAccept);
 
     Alert save(AlertDTO alertDTO);
     void delete (String id);

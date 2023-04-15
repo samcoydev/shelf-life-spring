@@ -13,6 +13,12 @@ public class UserDTO {
     @NotNull(message="Email cannot be empty.")
     private String email;
 
-    private boolean hasBeenWelcomed;
+    @NotNull(message="First Name cannot be empty")
+    private String firstName;
+
+    @NotNull(message="Last Name cannot be empty")
+    private String lastName;
+
+    private String householdId;
 
 }

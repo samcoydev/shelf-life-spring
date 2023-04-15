@@ -1,5 +1,6 @@
 package com.samcodesthings.shelfliferestapi.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -15,9 +16,17 @@ public class User {
     @Column(name = "email")
     private String email;
 
-    @ManyToOne
+    @Column(name = "first_name")
+    private String firstName;
+
+    @Column(name = "last_name")
+    private String lastName;
+
+    @ManyToOne(optional = true)
+    @JoinColumn(name = "household_id")
+    @JsonProperty("household_id")
     private Household household;
 
-    @Column(name = "hasBeenWelcomed")
+    @Column(name = "has_been_welcomed")
     private boolean hasBeenWelcomed;
 }

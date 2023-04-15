@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -28,9 +29,15 @@ public class UserController {
     }
 
     @GetMapping()
-    public User getUserByEmail(@RequestHeader("User-Email") String email) {
+    public UserDTO getUserData() {
         log.info("[GET] Find User");
-        return userService.findByEmail(email);
+        return userService.findSignedInUser();
+    }
+
+    @GetMapping("/household{householdId}")
+    public List<User> getUsersOfByHouseholdId(@PathVariable("householdId") String householdId) {
+        log.info("[GET] Users of same household " + householdId);
+        return userService.findByHouseholdId(householdId);
     }
 
     @PostMapping("/register")
@@ -49,12 +56,5 @@ public class UserController {
     public User leaveHousehold(@RequestHeader("User-Email") String email) {
         log.info("[PUT] Leave Household: " + email);
         return userService.updateHouseholdWithEmail(email, null);
-    }
-
-    @PostMapping("/request-household")
-    public void requestToJoinHousehold(@Valid @RequestBody String requestEmail, @RequestHeader("User-Email") String email) {
-        log.info(email + " is requesting to join " + requestEmail + "'s household.");
-        userService.householdRequestToUserFromUser(requestEmail, email);
-
     }
 }

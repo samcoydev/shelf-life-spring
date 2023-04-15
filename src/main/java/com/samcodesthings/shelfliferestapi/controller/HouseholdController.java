@@ -2,7 +2,7 @@ package com.samcodesthings.shelfliferestapi.controller;
 
 import com.samcodesthings.shelfliferestapi.dto.HouseholdDTO;
 import com.samcodesthings.shelfliferestapi.model.Household;
-import com.samcodesthings.shelfliferestapi.model.User;
+import com.samcodesthings.shelfliferestapi.model.HouseholdRequest;
 import com.samcodesthings.shelfliferestapi.service.HouseholdService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +32,14 @@ public class HouseholdController {
     public Household saveHousehold(@Valid @RequestBody HouseholdDTO householdDTO, @RequestHeader("User-Email") String email) {
         log.info("[POST] New Household with email: " + email);
         return householdService.save(householdDTO, email);
+    }
+
+    @PostMapping(path = "/request")
+    public HouseholdRequest requestToJoinHousehold(@RequestHeader("User-Email") String email, @Valid @RequestBody String householdName) throws Exception {
+        String cleanedName = householdName.replaceAll("\"", "");
+        log.debug("Old name: " + householdName + " Cleaned Name: " + cleanedName);
+        log.info("[POST] Requested to join Household: " + cleanedName + " with email: " + email);
+        return householdService.requestToJoinHousehold(email, cleanedName);
     }
 
 }
