@@ -5,6 +5,7 @@ import com.samcodesthings.shelfliferestapi.model.User;
 import com.samcodesthings.shelfliferestapi.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,16 +41,10 @@ public class UserController {
         return userService.findByHouseholdId(householdId);
     }
 
-    @PostMapping("/register")
-    public User saveUser(@Valid @RequestBody UserDTO user) {
-        log.info("[POST] New User");
-        return userService.save(user);
-    }
-
     @PostMapping(path = "/welcome")
-    public User welcomeUser(@Valid @RequestBody String email) {
+    public UserDTO welcomeUser() {
         log.info("[POST] Welcome User");
-        return userService.welcomeUserWithEmail(email);
+        return userService.welcomeUser();
     }
 
     @PutMapping("/household")

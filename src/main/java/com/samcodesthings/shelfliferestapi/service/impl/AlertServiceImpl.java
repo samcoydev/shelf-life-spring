@@ -1,8 +1,10 @@
 package com.samcodesthings.shelfliferestapi.service.impl;
 
 import com.samcodesthings.shelfliferestapi.dao.AlertDAO;
+import com.samcodesthings.shelfliferestapi.dao.HouseholdDAO;
 import com.samcodesthings.shelfliferestapi.dao.HouseholdRequestDAO;
 import com.samcodesthings.shelfliferestapi.dto.AlertDTO;
+import com.samcodesthings.shelfliferestapi.dto.UserDTO;
 import com.samcodesthings.shelfliferestapi.enums.AlertType;
 import com.samcodesthings.shelfliferestapi.model.Alert;
 import com.samcodesthings.shelfliferestapi.model.Household;
@@ -27,6 +29,8 @@ public class AlertServiceImpl implements AlertService {
 
     AlertDAO alertDAO;
 
+    HouseholdDAO householdDAO;
+
     HouseholdRequestDAO householdRequestDAO;
 
     UserService userService;
@@ -45,7 +49,7 @@ public class AlertServiceImpl implements AlertService {
 
         HouseholdRequest request = alert.get().getRequest();
 
-        User user = userService.findByEmail(request.getFromEmail());
+        UserDTO user = userService.findByEmail(request.getFromEmail());
         if (user == null) {
             log.error("User on request doesn't exist.");
         }
@@ -64,7 +68,8 @@ public class AlertServiceImpl implements AlertService {
     @Override
     public List<Alert> getAlertsByUserEmailsHousehold(String email) {
         List<Alert> alerts = new ArrayList<>();
-        alertDAO.findAlertsByAlertedHousehold(userService.findByEmail(email).getHousehold()).iterator().forEachRemaining(alerts::add);
+        Household household = householdDAO.findHouseholdById(userService.findByEmail(email).getHouseholdId()).get();
+        alertDAO.findAlertsByAlertedHousehold(household).iterator().forEachRemaining(alerts::add);
         return alerts;
     }
 

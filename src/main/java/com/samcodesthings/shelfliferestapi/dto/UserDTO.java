@@ -21,4 +21,6 @@ public class UserDTO {
 
     private String householdId;
 
+    private boolean hasBeenWelcomed;
+
 }
