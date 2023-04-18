@@ -8,6 +8,7 @@ import com.samcodesthings.shelfliferestapi.service.UserService;
 import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.admin.client.Keycloak;
+import org.keycloak.admin.client.resource.UserResource;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +17,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Service(value = "userService")
@@ -38,7 +41,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO findByEmail(String email) {
-        return mapUser(keycloak.realm(realm).users().searchByEmail(email, true).get(0));
+        return modelMapper.map(userDao.findByEmail(email), UserDTO.class);
     }
 
     @Override
@@ -49,53 +52,68 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserDTO findDTOById(String id) {
-        log.info("Searching for user with id: " + id);
-        return mapUser(keycloak.realm(realm).users().get(id).toRepresentation());
-    }
+    public User findById(String id) throws Exception {
+        Optional<User> user = userDao.findById(id);
 
-    @Override
-    public UserRepresentation findRepById(String id) {
-        log.info("Searching for user with id: " + id);
-        return keycloak.realm(realm).users().get(id).toRepresentation();
-    }
+        if (user.isEmpty())
+            return createUserRecord(id);
 
-    private String getCurrentId() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication.getName();
-    }
-
-    private UserDTO mapUser(UserRepresentation user) {
-        UserDTO mappedUser = new UserDTO();
-
-        mappedUser.setId(user.getId());
-        mappedUser.setEmail(user.getEmail());
-        mappedUser.setFirstName(user.getFirstName());
-        mappedUser.setLastName(user.getLastName());
-        Map<String, List<String>> attributes = user.getAttributes();
-
-        if (attributes != null) {
-            mappedUser.setHouseholdId(attributes.get("household_id").get(0));
-            mappedUser.setHasBeenWelcomed(Boolean.parseBoolean(attributes.get("hasBeenWelcomed").get(0)));
-        }
-
-        return mappedUser;
+        return user.get();
     }
 
     @Override
     public UserDTO findSignedInUser() {
-        return findDTOById(getCurrentId());
+        try {
+            return modelMapper.map(findById(getCurrentId()), UserDTO.class);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return null;
+        }
+    }
+
+    public User createUserRecord(String id) throws Exception {
+        UserRepresentation user = keycloak.realm(realm).users().get(id).toRepresentation();
+
+        if (user == null) {
+            log.error("No user in keycloak found by id: " + id);
+            throw new Exception("No user in keycloak found by id: " + id);
+        }
+
+        log.info("SAVE USER: " + user);
+
+        User newUser = new User();
+        newUser.setId(user.getId());
+        newUser.setEmail(user.getEmail());
+        newUser.setFirstName(user.getFirstName());
+        newUser.setLastName(user.getLastName());
+        newUser.setHasBeenWelcomed(false);
+
+        return userDao.save(newUser);
     }
 
     @Override
-    public User updateHouseholdWithEmail(String email, Household household) {
-        Optional<User> optionalUser = userDao.findByEmail(email);
+    public User updateHouseholdWithId(String id, Household household) {
+        Optional<User> optionalUser = userDao.findById(id);
 
         if (optionalUser.isPresent()) {
             User existingUser = optionalUser.get();
             existingUser.setHousehold(household);
 
             return userDao.save(existingUser);
+        } else {
+            log.info("Couldn't find user with email: " + id);
+            return null;
+        }
+    }
+
+    @Override
+    public UserDTO welcomeUserWithEmail(String email) {
+        Optional<User> optionalUser = userDao.findByEmail(email);
+
+        if (optionalUser.isPresent()) {
+            User existingUser = optionalUser.get();
+            existingUser.setHasBeenWelcomed(true);
+            return modelMapper.map(userDao.save(existingUser), UserDTO.class);
         } else {
             log.info("Couldn't find user with email: " + email);
             return null;
@@ -104,20 +122,29 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO welcomeUser() {
-        UserRepresentation user = findRepById(getCurrentId());
+        Optional<User> optionalUser = userDao.findById(getCurrentId());
 
-        Map<String, List<String>> currentAttributes = user.getAttributes();
-        currentAttributes.put("hasBeenWelcomed", Collections.singletonList("true"));
-
-        user.setAttributes(currentAttributes);
-
-        user.
-
-            return userDao.save(existingUser);
+        if (optionalUser.isPresent()) {
+            User existingUser = optionalUser.get();
+            existingUser.setHasBeenWelcomed(true);
+            return modelMapper.map(userDao.save(existingUser), UserDTO.class);
         } else {
-            log.info("Couldn't find user with email: " + email);
+            log.info("Couldn't find user with id: " + getCurrentId());
             return null;
         }
+    }
+
+    @Override
+    public void logout() {
+         UserResource user = keycloak.realm(realm).users().get(getCurrentId());
+
+         if (user != null)
+             user.logout();
+    }
+
+    private String getCurrentId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getName();
     }
 }
 

@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface AlertService {
 
-    List<Alert> getAlertsByUserEmailsHousehold(String email);
+    List<Alert> getAlertsByUserId();
     void respondToRequest(String alertId, boolean didAccept);
 
     Alert save(AlertDTO alertDTO);

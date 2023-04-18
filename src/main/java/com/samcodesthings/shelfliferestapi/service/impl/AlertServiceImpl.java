@@ -15,6 +15,8 @@ import com.samcodesthings.shelfliferestapi.service.HouseholdService;
 import com.samcodesthings.shelfliferestapi.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -49,14 +51,9 @@ public class AlertServiceImpl implements AlertService {
 
         HouseholdRequest request = alert.get().getRequest();
 
-        UserDTO user = userService.findByEmail(request.getFromEmail());
-        if (user == null) {
-            log.error("User on request doesn't exist.");
-        }
-
         if (didAccept) {
-            userService.updateHouseholdWithEmail(request.getFromEmail(), request.getRequestedHousehold());
-            userService.welcomeUserWithEmail(request.getFromEmail());
+            userService.updateHouseholdWithId(request.getFromUser().getId(), request.getRequestedHousehold());
+            userService.welcomeUserWithEmail(request.getFromUser().getEmail());
             log.info("Accepted request and successfully changed user household");
         } else {
             log.info("Rejected request.");
@@ -66,11 +63,16 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
-    public List<Alert> getAlertsByUserEmailsHousehold(String email) {
+    public List<Alert> getAlertsByUserId() {
         List<Alert> alerts = new ArrayList<>();
-        Household household = householdDAO.findHouseholdById(userService.findByEmail(email).getHouseholdId()).get();
-        alertDAO.findAlertsByAlertedHousehold(household).iterator().forEachRemaining(alerts::add);
-        return alerts;
+        try {
+            Household household = userService.findById(getCurrentId()).getHousehold();
+            alertDAO.findAlertsByAlertedHousehold(household).iterator().forEachRemaining(alerts::add);
+            return alerts;
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            return null;
+        }
     }
 
     @Override
@@ -102,4 +104,8 @@ public class AlertServiceImpl implements AlertService {
         return null;
     }
 
+    private String getCurrentId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getName();
+    }
 }

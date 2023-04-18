@@ -12,8 +12,8 @@ public class HouseholdRequest {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(name = "from_email")
-    private String fromEmail;
+    @ManyToOne(optional = false)
+    private User fromUser;
 
     @ManyToOne(optional = false)
     private Household requestedHousehold;

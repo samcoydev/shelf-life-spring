@@ -29,14 +29,14 @@ public class AlertController {
     }
 
     @GetMapping()
-    public List<Alert> getAlertsByUserEmail(@RequestHeader("User-Email") String email) {
-        log.info("[GET] Alerts for email: " + email);
-        return alertService.getAlertsByUserEmailsHousehold(email);
+    public List<Alert> getAlertsById() {
+        log.info("[GET] Alerts");
+        return alertService.getAlertsByUserId();
     }
 
     @PostMapping(path = "/action")
-    public void respondToRequest(@RequestHeader("User-Email") String email, @Valid @RequestBody RequestResponseDTO requestResponseDTO) {
-        log.info("[POST] Respond to email: " + email);
+    public void respondToRequest(@Valid @RequestBody RequestResponseDTO requestResponseDTO) {
+        log.info("[POST] Respond to request");
         alertService.respondToRequest(requestResponseDTO.getAlertId(), requestResponseDTO.isDidAccept());
     }
 

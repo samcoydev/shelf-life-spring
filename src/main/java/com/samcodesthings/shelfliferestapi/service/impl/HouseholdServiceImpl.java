@@ -4,15 +4,19 @@ import com.samcodesthings.shelfliferestapi.dao.HouseholdDAO;
 import com.samcodesthings.shelfliferestapi.dao.HouseholdRequestDAO;
 import com.samcodesthings.shelfliferestapi.dto.AlertDTO;
 import com.samcodesthings.shelfliferestapi.dto.HouseholdDTO;
+import com.samcodesthings.shelfliferestapi.dto.UserDTO;
 import com.samcodesthings.shelfliferestapi.enums.AlertType;
 import com.samcodesthings.shelfliferestapi.model.Alert;
 import com.samcodesthings.shelfliferestapi.model.Household;
 import com.samcodesthings.shelfliferestapi.model.HouseholdRequest;
+import com.samcodesthings.shelfliferestapi.model.User;
 import com.samcodesthings.shelfliferestapi.service.AlertService;
 import com.samcodesthings.shelfliferestapi.service.HouseholdService;
 import com.samcodesthings.shelfliferestapi.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -51,15 +55,12 @@ public class HouseholdServiceImpl implements HouseholdService {
     }
 
     @Override
-    public Household save(HouseholdDTO householdDTO, String email) {
-        if (userService.findByEmail(email) == null)
-            log.error("There was no user with email: " + email + " found in the database.");
-
+    public Household save(HouseholdDTO householdDTO) {
         Household newHousehold = new Household();
         newHousehold.setName(householdDTO.getName());
 
         Household savedHouse = householdDAO.save(newHousehold);
-        userService.updateHouseholdWithEmail(email, savedHouse);
+        userService.updateHouseholdWithId(getCurrentId(), savedHouse);
 
         return savedHouse;
     }
@@ -78,21 +79,22 @@ public class HouseholdServiceImpl implements HouseholdService {
     }
 
     @Override
-    public HouseholdRequest requestToJoinHousehold(String fromEmail, String householdName) throws Exception {
+    public HouseholdRequest requestToJoinHousehold(String householdName) throws Exception {
             if (findByName(householdName).isEmpty())
                 throw new Exception("There was no household by the name of: " + householdName);
 
             Household household = findByName(householdName).get();
+            User user = userService.findById(getCurrentId());
 
             HouseholdRequest newReq = new HouseholdRequest();
             newReq.setRequestedHousehold(household);
-            newReq.setFromEmail(fromEmail);
+            newReq.setFromUser(user);
             HouseholdRequest savedReq = householdRequestDAO.save(newReq);
 
             AlertDTO newAlert = new AlertDTO();
             newAlert.setAlertType(AlertType.REQUEST);
             newAlert.setHousehold(household);
-            newAlert.setText("User " + fromEmail + " would like to join your Household");
+            newAlert.setText("User " + user.getEmail() + " would like to join your Household");
             newAlert.setRequest(savedReq);
             alertService.save(newAlert);
 
@@ -103,6 +105,11 @@ public class HouseholdServiceImpl implements HouseholdService {
     public void delete(String id) {
         Household household = householdDAO.findById(id).get();
         householdDAO.delete(household);
+    }
+
+    private String getCurrentId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getName();
     }
 
 }

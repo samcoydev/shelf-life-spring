@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import javax.ws.rs.Path;
 import java.util.Collections;
 import java.util.Map;
 
@@ -29,17 +30,15 @@ public class HouseholdController {
     }
 
     @PostMapping()
-    public Household saveHousehold(@Valid @RequestBody HouseholdDTO householdDTO, @RequestHeader("User-Email") String email) {
-        log.info("[POST] New Household with email: " + email);
-        return householdService.save(householdDTO, email);
+    public Household saveHousehold(@Valid @RequestBody HouseholdDTO householdDTO) {
+        log.info("[POST] New Household");
+        return householdService.save(householdDTO);
     }
 
-    @PostMapping(path = "/request")
-    public HouseholdRequest requestToJoinHousehold(@RequestHeader("User-Email") String email, @Valid @RequestBody String householdName) throws Exception {
-        String cleanedName = householdName.replaceAll("\"", "");
-        log.debug("Old name: " + householdName + " Cleaned Name: " + cleanedName);
-        log.info("[POST] Requested to join Household: " + cleanedName + " with email: " + email);
-        return householdService.requestToJoinHousehold(email, cleanedName);
+    @PostMapping("/request/{name}")
+    public HouseholdRequest requestToJoinHousehold(@PathVariable("name") String householdName) throws Exception {
+        log.info("[POST] Requested to join Household: " + householdName);
+        return householdService.requestToJoinHousehold(householdName);
     }
 
 }

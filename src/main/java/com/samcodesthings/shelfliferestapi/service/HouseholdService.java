@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface HouseholdService {
 
-    Household save(HouseholdDTO householdDTO, String email);
+    Household save(HouseholdDTO householdDTO);
     Household update(String id, HouseholdDTO householdDTO);
     void delete (String id);
 
@@ -17,6 +17,6 @@ public interface HouseholdService {
     Optional<Household> findByName(String name);
     Household findById(String id);
 
-    HouseholdRequest requestToJoinHousehold(String fromEmail, String householdName) throws Exception;
+    HouseholdRequest requestToJoinHousehold(String householdName) throws Exception;
 
 }

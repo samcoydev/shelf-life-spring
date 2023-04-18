@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.keycloak.representations.idm.UserRepresentation;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -35,21 +37,31 @@ public class UserController {
         return userService.findSignedInUser();
     }
 
+    @PostMapping("/logout")
+    public void logout() {
+        userService.logout();
+    }
+
     @GetMapping("/household{householdId}")
     public List<User> getUsersOfByHouseholdId(@PathVariable("householdId") String householdId) {
         log.info("[GET] Users of same household " + householdId);
         return userService.findByHouseholdId(householdId);
     }
 
-    @PostMapping(path = "/welcome")
+    @PostMapping("/welcome")
     public UserDTO welcomeUser() {
         log.info("[POST] Welcome User");
         return userService.welcomeUser();
     }
 
     @PutMapping("/household")
-    public User leaveHousehold(@RequestHeader("User-Email") String email) {
-        log.info("[PUT] Leave Household: " + email);
-        return userService.updateHouseholdWithEmail(email, null);
+    public User leaveHousehold() {
+        log.info("[PUT] Leave Household");
+        return userService.updateHouseholdWithId(getCurrentId(), null);
+    }
+
+    private String getCurrentId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getName();
     }
 }

@@ -10,12 +10,14 @@ import java.util.List;
 public interface UserService {
 
     UserDTO findByEmail(String email);
-    UserDTO findDTOById(String id);
-    UserRepresentation findRepById(String id);
+    User findById(String id) throws Exception;
     UserDTO findSignedInUser();
     List<User> findByHouseholdId(String householdId);
 
-    User updateHouseholdWithEmail(String email, Household household);
+    User updateHouseholdWithId(String id, Household household);
     UserDTO welcomeUser();
+    UserDTO welcomeUserWithEmail(String email);
+
+    void logout();
 
 }
