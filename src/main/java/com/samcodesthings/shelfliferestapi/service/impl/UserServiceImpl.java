@@ -7,6 +7,7 @@ import com.samcodesthings.shelfliferestapi.dto.UserDTO;
 import com.samcodesthings.shelfliferestapi.enums.AlertType;
 import com.samcodesthings.shelfliferestapi.exception.AlertNotFoundException;
 import com.samcodesthings.shelfliferestapi.exception.NotAValidRequestException;
+import com.samcodesthings.shelfliferestapi.exception.UserNotAuthorizedException;
 import com.samcodesthings.shelfliferestapi.exception.UserNotFoundException;
 import com.samcodesthings.shelfliferestapi.model.*;
 import com.samcodesthings.shelfliferestapi.service.AlertService;
@@ -28,6 +29,7 @@ import javax.swing.text.html.Option;
 import java.sql.Array;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -248,6 +250,17 @@ public class UserServiceImpl implements UserService {
              throw new UserNotFoundException("User with ID: " + getCurrentId() + " is not registered");
 
          user.logout();
+    }
+
+    @Override
+    public void deleteUserAlert(String id) throws AlertNotFoundException, UserNotAuthorizedException {
+        // First check if alert belongs to user
+        Alert alert = alertService.findAlertById(id);
+
+        if (alert.getAlertedUser() == null || !Objects.equals(alert.getAlertedUser().getId(), getCurrentId()))
+            throw new UserNotAuthorizedException("You are not authorized to delete the Alert with ID: " + id);
+
+        alertService.delete(id);
     }
 
     private String getCurrentId() {

@@ -6,6 +6,7 @@ import com.samcodesthings.shelfliferestapi.dto.RequestResponseDTO;
 import com.samcodesthings.shelfliferestapi.dto.UserDTO;
 import com.samcodesthings.shelfliferestapi.exception.AlertNotFoundException;
 import com.samcodesthings.shelfliferestapi.exception.NotAValidRequestException;
+import com.samcodesthings.shelfliferestapi.exception.UserNotAuthorizedException;
 import com.samcodesthings.shelfliferestapi.exception.UserNotFoundException;
 import com.samcodesthings.shelfliferestapi.model.Alert;
 import com.samcodesthings.shelfliferestapi.model.FriendRequest;
@@ -13,6 +14,7 @@ import com.samcodesthings.shelfliferestapi.model.User;
 import com.samcodesthings.shelfliferestapi.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.keycloak.authorization.client.util.Http;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -145,6 +147,12 @@ public class UserController {
     public List<AlertDTO> getAlertsById() {
         log.info("[GET] User Alerts");
         return userService.getUserAlerts();
+    }
+
+    @DeleteMapping("/alerts/{id}")
+    public ResponseEntity<String> deleteAlertById(@PathVariable("id") String id) throws AlertNotFoundException, UserNotAuthorizedException {
+        userService.deleteUserAlert(id);
+        return new ResponseEntity<>("Alert successfully deleted", HttpStatus.OK);
     }
 
     private String getCurrentId() {

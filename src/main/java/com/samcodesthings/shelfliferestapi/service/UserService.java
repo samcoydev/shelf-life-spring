@@ -5,6 +5,7 @@ import com.samcodesthings.shelfliferestapi.dto.FriendRequestDTO;
 import com.samcodesthings.shelfliferestapi.dto.UserDTO;
 import com.samcodesthings.shelfliferestapi.exception.AlertNotFoundException;
 import com.samcodesthings.shelfliferestapi.exception.NotAValidRequestException;
+import com.samcodesthings.shelfliferestapi.exception.UserNotAuthorizedException;
 import com.samcodesthings.shelfliferestapi.exception.UserNotFoundException;
 import com.samcodesthings.shelfliferestapi.model.Alert;
 import com.samcodesthings.shelfliferestapi.model.Household;
@@ -31,5 +32,6 @@ public interface UserService {
     UserDTO markUserAsWelcomedByEmail(String email) throws UserNotFoundException;
 
     void logout() throws UserNotFoundException;
+    void deleteUserAlert(String id) throws AlertNotFoundException, UserNotAuthorizedException;
 
 }
