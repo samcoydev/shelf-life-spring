@@ -4,8 +4,11 @@ import com.samcodesthings.shelfliferestapi.dao.HouseholdDAO;
 import com.samcodesthings.shelfliferestapi.dao.HouseholdRequestDAO;
 import com.samcodesthings.shelfliferestapi.dto.AlertDTO;
 import com.samcodesthings.shelfliferestapi.dto.HouseholdDTO;
-import com.samcodesthings.shelfliferestapi.dto.UserDTO;
 import com.samcodesthings.shelfliferestapi.enums.AlertType;
+import com.samcodesthings.shelfliferestapi.exception.AlertNotFoundException;
+import com.samcodesthings.shelfliferestapi.exception.HouseholdNotFoundException;
+import com.samcodesthings.shelfliferestapi.exception.NotAValidRequestException;
+import com.samcodesthings.shelfliferestapi.exception.UserNotFoundException;
 import com.samcodesthings.shelfliferestapi.model.Alert;
 import com.samcodesthings.shelfliferestapi.model.Household;
 import com.samcodesthings.shelfliferestapi.model.HouseholdRequest;
@@ -55,7 +58,7 @@ public class HouseholdServiceImpl implements HouseholdService {
     }
 
     @Override
-    public Household save(HouseholdDTO householdDTO) {
+    public Household save(HouseholdDTO householdDTO) throws UserNotFoundException {
         Household newHousehold = new Household();
         newHousehold.setName(householdDTO.getName());
 
@@ -79,12 +82,12 @@ public class HouseholdServiceImpl implements HouseholdService {
     }
 
     @Override
-    public HouseholdRequest requestToJoinHousehold(String householdName) throws Exception {
+    public HouseholdRequest requestToJoinHousehold(String householdName) throws HouseholdNotFoundException, UserNotFoundException {
             if (findByName(householdName).isEmpty())
-                throw new Exception("There was no household by the name of: " + householdName);
+                throw new HouseholdNotFoundException("There was no household by the name of: " + householdName);
 
             Household household = findByName(householdName).get();
-            User user = userService.findById(getCurrentId());
+            User user = userService.findById(getCurrentId(), false);
 
             HouseholdRequest newReq = new HouseholdRequest();
             newReq.setRequestedHousehold(household);
@@ -102,34 +105,34 @@ public class HouseholdServiceImpl implements HouseholdService {
     }
 
     @Override
-    public void respondToRequest(String alertId, boolean didAccept) {
-        Optional<Alert> alert = alertService.findAlertById(alertId);
+    public void respondToRequest(String alertId, boolean didAccept) throws AlertNotFoundException, NotAValidRequestException, UserNotFoundException {
+        Alert alert = alertService.findAlertById(alertId);
 
-        if (alert.isEmpty()) {
-            log.error("Could not find Alert with ID: " + alertId);
-            return;
-        } else if (alert.get().getAlertType() != AlertType.REQUEST || alert.get().getHouseholdRequest() == null) {
-            log.error("Alert did not have an attached request or wasn't a request alert");
-            return;
+        if (alert.getAlertType() != AlertType.REQUEST || alert.getHouseholdRequest() == null) {
+            throw new NotAValidRequestException("Alert with ID: " + alertId + " is not a valid household request");
         }
 
-        HouseholdRequest request = alert.get().getHouseholdRequest();
+        HouseholdRequest request = alert.getHouseholdRequest();
 
         if (didAccept) {
             userService.updateHouseholdWithId(request.getFromUser().getId(), request.getRequestedHousehold());
-            userService.welcomeUserWithEmail(request.getFromUser().getEmail());
+            userService.markUserAsWelcomedByEmail(request.getFromUser().getEmail());
             log.info("Accepted request and successfully changed user household");
         } else {
             log.info("Rejected request.");
         }
 
-        alertService.delete(alert.get().getId());
+        alertService.delete(alert.getId());
     }
 
     @Override
-    public void delete(String id) {
-        Household household = householdDAO.findById(id).get();
-        householdDAO.delete(household);
+    public void delete(String id) throws HouseholdNotFoundException {
+        Optional<Household> household = householdDAO.findById(id);
+
+        if (household.isEmpty())
+            throw new HouseholdNotFoundException("Could not find Household by ID: " + id);
+
+        householdDAO.delete(household.get());
     }
 
     private String getCurrentId() {

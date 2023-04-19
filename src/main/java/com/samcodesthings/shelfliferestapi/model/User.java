@@ -1,5 +1,6 @@
 package com.samcodesthings.shelfliferestapi.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -37,6 +38,7 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "friend_id")
     )
+    @JsonIgnoreProperties("friendsList")
     private List<User> friendsList;
 
     public void addFriend(User friend) {

@@ -4,14 +4,18 @@ import com.samcodesthings.shelfliferestapi.dto.AlertDTO;
 import com.samcodesthings.shelfliferestapi.dto.FriendRequestDTO;
 import com.samcodesthings.shelfliferestapi.dto.RequestResponseDTO;
 import com.samcodesthings.shelfliferestapi.dto.UserDTO;
+import com.samcodesthings.shelfliferestapi.exception.AlertNotFoundException;
+import com.samcodesthings.shelfliferestapi.exception.NotAValidRequestException;
+import com.samcodesthings.shelfliferestapi.exception.UserNotFoundException;
 import com.samcodesthings.shelfliferestapi.model.Alert;
 import com.samcodesthings.shelfliferestapi.model.FriendRequest;
 import com.samcodesthings.shelfliferestapi.model.User;
 import com.samcodesthings.shelfliferestapi.service.UserService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.keycloak.representations.idm.UserRepresentation;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -48,7 +52,7 @@ public class UserController {
      * @return A UserDTO object containing the signed-in user's information.
      */
     @GetMapping()
-    public UserDTO getUserData() {
+    public UserDTO getUserData() throws UserNotFoundException {
         log.info("[GET] Find User");
         return userService.findSignedInUser();
     }
@@ -57,8 +61,9 @@ public class UserController {
      * Logs out the currently signed-in user.
      */
     @PostMapping("/logout")
-    public void logout() {
+    public ResponseEntity<String> logout() throws UserNotFoundException {
         userService.logout();
+        return new ResponseEntity<>("Successfully logged out", HttpStatus.OK);
     }
 
     /**
@@ -68,7 +73,7 @@ public class UserController {
      */
     @GetMapping("/friends")
     public List<UserDTO> getUsersFriends() {
-        log.info("[GET] Find Users Friends");
+        log.info("[GET] Finding users friends");
         return userService.getUsersFriends();
     }
 
@@ -78,9 +83,10 @@ public class UserController {
      * @param userEmail The email address of the user to send the friend request to.
      */
     @PostMapping("/friends/{userEmail}")
-    public void sendFriendRequest(@PathVariable("userEmail") String userEmail) {
-        log.info("Sending friend request to " + userEmail);
+    public ResponseEntity<String> sendFriendRequest(@PathVariable("userEmail") String userEmail) throws UserNotFoundException {
+        log.info("[POST] Sending friend request to " + userEmail);
         userService.sendFriendRequest(userEmail);
+        return new ResponseEntity<>("Successfully sent a friend request to " + userEmail, HttpStatus.OK);
     }
 
     /**
@@ -89,9 +95,10 @@ public class UserController {
      * @param requestResponseDTO The response containing the acceptance or rejection to the request.
      */
     @PostMapping(path = "/friends/action")
-    public void respondToRequest(@Valid @RequestBody RequestResponseDTO requestResponseDTO) {
+    public ResponseEntity<String> respondToRequest(@Valid @RequestBody RequestResponseDTO requestResponseDTO) throws NotAValidRequestException, AlertNotFoundException {
         log.info("[POST] Respond to friend request");
         userService.respondToRequest(requestResponseDTO.getAlertId(), requestResponseDTO.isDidAccept());
+        return new ResponseEntity<>("Successfully logged out", HttpStatus.OK);
     }
 
     /**
@@ -113,7 +120,7 @@ public class UserController {
      * @return A UserDTO object representing the newly welcomed user.
      */
     @PostMapping("/welcome")
-    public UserDTO welcomeUser() {
+    public UserDTO welcomeUser() throws UserNotFoundException {
         log.info("[POST] Welcome User");
         return userService.welcomeUser();
     }
@@ -124,7 +131,7 @@ public class UserController {
      * @return A User object representing the updated user.
      */
     @PutMapping("/household/leave")
-    public User leaveHousehold() {
+    public User leaveHousehold() throws UserNotFoundException {
         log.info("[PUT] Leave Household");
         return userService.updateHouseholdWithId(getCurrentId(), null);
     }

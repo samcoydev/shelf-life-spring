@@ -2,6 +2,7 @@ package com.samcodesthings.shelfliferestapi.service;
 
 import com.samcodesthings.shelfliferestapi.dto.AlertDTO;
 import com.samcodesthings.shelfliferestapi.dto.HouseholdDTO;
+import com.samcodesthings.shelfliferestapi.exception.AlertNotFoundException;
 import com.samcodesthings.shelfliferestapi.model.Alert;
 import com.samcodesthings.shelfliferestapi.model.Household;
 import com.samcodesthings.shelfliferestapi.model.User;
@@ -38,9 +39,9 @@ public interface AlertService {
      * Retrieves the Alert with the specified ID, if it exists.
      *
      * @param id the ID of the Alert to be retrieved
-     * @return an Optional containing the Alert with the specified ID, if it exists;
-     *         otherwise, an empty Optional
+     * @return an Alert with the specified ID, if it exists;
+     *         otherwise, throws an error.
      */
-    Optional<Alert> findAlertById(String id);
+    Alert findAlertById(String id) throws AlertNotFoundException;
 
 }

@@ -4,6 +4,7 @@ import com.samcodesthings.shelfliferestapi.dao.*;
 import com.samcodesthings.shelfliferestapi.dto.AlertDTO;
 import com.samcodesthings.shelfliferestapi.dto.UserDTO;
 import com.samcodesthings.shelfliferestapi.enums.AlertType;
+import com.samcodesthings.shelfliferestapi.exception.AlertNotFoundException;
 import com.samcodesthings.shelfliferestapi.model.*;
 import com.samcodesthings.shelfliferestapi.service.AlertService;
 import com.samcodesthings.shelfliferestapi.service.HouseholdService;
@@ -42,8 +43,13 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
-    public Optional<Alert> findAlertById(String id) {
-        return alertDAO.findAlertById(id);
+    public Alert findAlertById(String id) throws AlertNotFoundException {
+        Optional<Alert> alert = alertDAO.findAlertById(id);
+
+        if (alert.isEmpty())
+            throw new AlertNotFoundException(notFoundAlertWithID(id));
+
+        return alert.get();
     }
 
     @Override
@@ -95,5 +101,9 @@ public class AlertServiceImpl implements AlertService {
     private String getCurrentId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication.getName();
+    }
+
+    private String notFoundAlertWithID(String id) {
+        return "Could not find Alert with ID: " + id;
     }
 }
