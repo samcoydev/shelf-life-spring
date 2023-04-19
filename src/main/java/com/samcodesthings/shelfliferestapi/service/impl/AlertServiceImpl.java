@@ -1,15 +1,10 @@
 package com.samcodesthings.shelfliferestapi.service.impl;
 
-import com.samcodesthings.shelfliferestapi.dao.AlertDAO;
-import com.samcodesthings.shelfliferestapi.dao.HouseholdDAO;
-import com.samcodesthings.shelfliferestapi.dao.HouseholdRequestDAO;
+import com.samcodesthings.shelfliferestapi.dao.*;
 import com.samcodesthings.shelfliferestapi.dto.AlertDTO;
 import com.samcodesthings.shelfliferestapi.dto.UserDTO;
 import com.samcodesthings.shelfliferestapi.enums.AlertType;
-import com.samcodesthings.shelfliferestapi.model.Alert;
-import com.samcodesthings.shelfliferestapi.model.Household;
-import com.samcodesthings.shelfliferestapi.model.HouseholdRequest;
-import com.samcodesthings.shelfliferestapi.model.User;
+import com.samcodesthings.shelfliferestapi.model.*;
 import com.samcodesthings.shelfliferestapi.service.AlertService;
 import com.samcodesthings.shelfliferestapi.service.HouseholdService;
 import com.samcodesthings.shelfliferestapi.service.UserService;
@@ -33,57 +28,50 @@ public class AlertServiceImpl implements AlertService {
 
     HouseholdDAO householdDAO;
 
+    UserDAO userDAO;
+
     HouseholdRequestDAO householdRequestDAO;
 
-    UserService userService;
+    FriendRequestDAO friendRequestDAO;
 
     @Override
-    public void respondToRequest(String alertId, boolean didAccept) {
-        Optional<Alert> alert = alertDAO.findAlertById(alertId);
-
-        if (alert.isEmpty()) {
-            log.error("Could not find Alert with ID: " + alertId);
-            return;
-        } else if (alert.get().getAlertType() != AlertType.REQUEST || alert.get().getRequest() == null) {
-            log.error("Alert did not have an attached request or wasn't a request alert");
-            return;
-        }
-
-        HouseholdRequest request = alert.get().getRequest();
-
-        if (didAccept) {
-            userService.updateHouseholdWithId(request.getFromUser().getId(), request.getRequestedHousehold());
-            userService.welcomeUserWithEmail(request.getFromUser().getEmail());
-            log.info("Accepted request and successfully changed user household");
-        } else {
-            log.info("Rejected request.");
-        }
-
-        alertDAO.delete(alert.get());
+    public List<Alert> findUserAlerts(User user) {
+        List<Alert> alerts = new ArrayList<>();
+        alertDAO.findAlertsByAlertedUserOrAlertedHousehold(user, user.getHousehold()).iterator().forEachRemaining(alerts::add);
+        return alerts;
     }
 
     @Override
-    public List<Alert> getAlertsByUserId() {
-        List<Alert> alerts = new ArrayList<>();
-        try {
-            Household household = userService.findById(getCurrentId()).getHousehold();
-            alertDAO.findAlertsByAlertedHousehold(household).iterator().forEachRemaining(alerts::add);
-            return alerts;
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            return null;
-        }
+    public Optional<Alert> findAlertById(String id) {
+        return alertDAO.findAlertById(id);
     }
 
     @Override
     public Alert save(AlertDTO alertDTO) {
         Alert newAlert = new Alert();
 
-        newAlert.setAlertedHousehold(alertDTO.getHousehold());
         newAlert.setAlertType(alertDTO.getAlertType());
         newAlert.setExpiration(getExpiration(alertDTO));
         newAlert.setText(alertDTO.getText());
-        newAlert.setRequest(alertDTO.getRequest());
+
+        if (alertDTO.getAlertedHouseholdId() != null) {
+            Optional<Household> alertedHousehold = householdDAO.findHouseholdById(alertDTO.getAlertedHouseholdId());
+            alertedHousehold.ifPresent(newAlert::setAlertedHousehold);
+        }
+
+        if (alertDTO.getAlertedUserId() != null) {
+            Optional<User> alertedUser = userDAO.findById(alertDTO.getAlertedUserId());
+            alertedUser.ifPresent(newAlert::setAlertedUser);
+        }
+
+        if (alertDTO.getHouseholdRequestId() != null) {
+            Optional<HouseholdRequest> hr = householdRequestDAO.findById(alertDTO.getHouseholdRequestId());
+            hr.ifPresent(newAlert::setHouseholdRequest);
+        }
+        if (alertDTO.getFriendRequestId() != null) {
+            Optional<FriendRequest> fr = friendRequestDAO.findById(alertDTO.getFriendRequestId());
+            fr.ifPresent(newAlert::setFriendRequest);
+        }
 
         return alertDAO.save(newAlert);
     }

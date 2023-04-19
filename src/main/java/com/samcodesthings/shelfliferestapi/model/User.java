@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.List;
+
 @Entity
 @Table(name = "sl_user")
 @Data
@@ -28,4 +30,20 @@ public class User {
 
     @Column(name = "has_been_welcomed")
     private boolean hasBeenWelcomed;
+
+    @ManyToMany
+    @JoinTable(
+            name = "friends",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "friend_id")
+    )
+    private List<User> friendsList;
+
+    public void addFriend(User friend) {
+        this.friendsList.add(friend);
+    }
+
+    public void removeFriend(User friend) {
+        this.friendsList.remove(friend);
+    }
 }

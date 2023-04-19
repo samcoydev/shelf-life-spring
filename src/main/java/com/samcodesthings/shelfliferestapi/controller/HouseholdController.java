@@ -1,6 +1,7 @@
 package com.samcodesthings.shelfliferestapi.controller;
 
 import com.samcodesthings.shelfliferestapi.dto.HouseholdDTO;
+import com.samcodesthings.shelfliferestapi.dto.RequestResponseDTO;
 import com.samcodesthings.shelfliferestapi.model.Household;
 import com.samcodesthings.shelfliferestapi.model.HouseholdRequest;
 import com.samcodesthings.shelfliferestapi.service.HouseholdService;
@@ -10,7 +11,6 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import javax.ws.rs.Path;
 import java.util.Collections;
 import java.util.Map;
 
@@ -39,6 +39,12 @@ public class HouseholdController {
     public HouseholdRequest requestToJoinHousehold(@PathVariable("name") String householdName) throws Exception {
         log.info("[POST] Requested to join Household: " + householdName);
         return householdService.requestToJoinHousehold(householdName);
+    }
+
+    @PostMapping(path = "/request/action")
+    public void respondToRequest(@Valid @RequestBody RequestResponseDTO requestResponseDTO) {
+        log.info("[POST] Respond to request");
+        householdService.respondToRequest(requestResponseDTO.getAlertId(), requestResponseDTO.isDidAccept());
     }
 
 }

@@ -1,8 +1,6 @@
 package com.samcodesthings.shelfliferestapi.dto;
 
 import com.samcodesthings.shelfliferestapi.enums.AlertType;
-import com.samcodesthings.shelfliferestapi.model.Household;
-import com.samcodesthings.shelfliferestapi.model.HouseholdRequest;
 import lombok.Data;
 
 import java.util.Date;
@@ -10,7 +8,11 @@ import java.util.Date;
 @Data
 public class AlertDTO {
 
-    private Household household;
+    private String id;
+
+    private String alertedHouseholdId;
+
+    private String alertedUserId;
 
     private String text;
 
@@ -18,6 +20,8 @@ public class AlertDTO {
 
     private AlertType alertType;
 
-    private HouseholdRequest request;
+    private String householdRequestId;
+
+    private String friendRequestId;
 
 }

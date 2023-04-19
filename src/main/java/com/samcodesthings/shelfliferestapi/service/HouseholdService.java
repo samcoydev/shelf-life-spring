@@ -18,5 +18,6 @@ public interface HouseholdService {
     Household findById(String id);
 
     HouseholdRequest requestToJoinHousehold(String householdName) throws Exception;
+    void respondToRequest(String alertId, boolean didAccept);
 
 }

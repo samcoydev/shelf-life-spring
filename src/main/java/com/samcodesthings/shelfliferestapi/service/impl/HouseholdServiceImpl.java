@@ -93,12 +93,37 @@ public class HouseholdServiceImpl implements HouseholdService {
 
             AlertDTO newAlert = new AlertDTO();
             newAlert.setAlertType(AlertType.REQUEST);
-            newAlert.setHousehold(household);
+            newAlert.setAlertedHouseholdId(household.getId());
             newAlert.setText("User " + user.getEmail() + " would like to join your Household");
-            newAlert.setRequest(savedReq);
+            newAlert.setHouseholdRequestId(savedReq.getId());
             alertService.save(newAlert);
 
             return savedReq;
+    }
+
+    @Override
+    public void respondToRequest(String alertId, boolean didAccept) {
+        Optional<Alert> alert = alertService.findAlertById(alertId);
+
+        if (alert.isEmpty()) {
+            log.error("Could not find Alert with ID: " + alertId);
+            return;
+        } else if (alert.get().getAlertType() != AlertType.REQUEST || alert.get().getHouseholdRequest() == null) {
+            log.error("Alert did not have an attached request or wasn't a request alert");
+            return;
+        }
+
+        HouseholdRequest request = alert.get().getHouseholdRequest();
+
+        if (didAccept) {
+            userService.updateHouseholdWithId(request.getFromUser().getId(), request.getRequestedHousehold());
+            userService.welcomeUserWithEmail(request.getFromUser().getEmail());
+            log.info("Accepted request and successfully changed user household");
+        } else {
+            log.info("Rejected request.");
+        }
+
+        alertService.delete(alert.get().getId());
     }
 
     @Override

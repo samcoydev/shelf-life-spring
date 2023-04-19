@@ -16,21 +16,32 @@ public class Alert {
     @GeneratedValue(strategy = GenerationType.UUID)
     private String id;
 
-    @Column(name = "alert_test")
+    @Column(name = "alert_text")
     private String text;
 
-    @ManyToOne(optional = false)
+    @ManyToOne()
     @JoinColumn(name = "alerted_household_id")
     @JsonProperty("alerted_household_id")
     private Household alertedHousehold;
+
+    @ManyToOne()
+    @JoinColumn(name = "alerted_user_id")
+    @JsonProperty("alerted_user_id")
+    private User alertedUser;
 
     private Date expiration;
 
     private AlertType alertType;
 
-    @OneToOne(optional = true, cascade = CascadeType.REMOVE)
+    @OneToOne(cascade = CascadeType.REMOVE)
     @JoinColumn(name = "household_request_id")
     @JsonProperty("household_request_id")
-    private HouseholdRequest request;
+    private HouseholdRequest householdRequest;
+
+
+    @OneToOne(cascade = CascadeType.REMOVE)
+    @JoinColumn(name = "friend_request_id")
+    @JsonProperty("friend_request_id")
+    private FriendRequest friendRequest;
 
 }
