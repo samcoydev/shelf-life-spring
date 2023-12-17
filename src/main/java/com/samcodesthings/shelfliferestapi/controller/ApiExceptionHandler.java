@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
+
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @ControllerAdvice
 @Slf4j
@@ -55,9 +56,8 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleException(Exception ex) {
         ApiError apiError = new ApiError(HttpStatus.INTERNAL_SERVER_ERROR);
         apiError.setMessage(ex.getMessage());
+        ex.printStackTrace();
         return buildResponseEntity(apiError);
     }
-
-
 
 }
